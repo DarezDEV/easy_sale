@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_easy_sales_root" name="Easy Sales"/>
+    <menuitem id="menu_products" parent="menu_easy_sales_root" name="Productos" action="action_product"/>
+    <menuitem id="menu_customers" parent="menu_easy_sales_root" name="Clientes" action="action_customer"/>
+    <menuitem id="menu_sales" parent="menu_easy_sales_root" name="Ventas" action="action_sale"/>
+    <menuitem id="menu_debts" parent="menu_easy_sales_root" name="Deudas" action="action_debt"/>
+</odoo>

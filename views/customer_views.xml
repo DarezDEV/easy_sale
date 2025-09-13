@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_customer_tree" model="ir.ui.view">
+        <field name="name">easy.sales.customer.list</field>
+        <field name="model">easy.sales.customer</field>
+        <field name="arch" type="xml">
+            <list editable="top">
+                <field name="name"/>
+                <field name="phone"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_customer_form" model="ir.ui.view">
+        <field name="name">easy.sales.customer.form</field>
+        <field name="model">easy.sales.customer</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="phone"/>
+                    </group>
+                    <notebook>
+                        <page string="Historial">
+                            <field name="sale_ids">
+                                <list>
+                                    <field name="product_id"/>
+                                    <field name="quantity"/>
+                                    <field name="total"/>
+                                    <field name="type"/>
+                                </list>
+                            </field>
+                            <field name="debt_ids">
+                                <list>
+                                    <field name="amount"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_customer" model="ir.actions.act_window">
+        <field name="name">Clientes</field>
+        <field name="res_model">easy.sales.customer</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_customer_tree"/>
+    </record>
+</odoo>

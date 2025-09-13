@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_easy_sales_product,access_easy_sales_product,model_easy_sales_product,,1,1,1,1
+access_easy_sales_product_size,access_easy_sales_product_size,model_easy_sales_product_size,,1,1,1,1
+access_easy_sales_category,access_easy_sales_category,model_easy_sales_category,,1,1,1,1
+access_easy_sales_customer,access_easy_sales_customer,model_easy_sales_customer,,1,1,1,1
+access_easy_sales_sale,access_easy_sales_sale,model_easy_sales_sale,,1,1,1,1
+access_easy_sales_debt,access_easy_sales_debt,model_easy_sales_debt,,1,1,1,1
+access_easy_sales_payment,access_easy_sales_payment,model_easy_sales_payment,,1,1,1,1
