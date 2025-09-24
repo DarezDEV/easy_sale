@@ -1,5 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Vista de líneas de venta -->
+    <record id="view_sale_line_tree" model="ir.ui.view">
+        <field name="name">easy.sales.sale.line.list</field>
+        <field name="model">easy.sales.sale.line</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="product_id" options="{'no_create': False}"/>
+                <field name="size" widget="selection"/>
+                <field name="quantity"/>
+                <field name="unit_price" readonly="1" widget="monetary"/>
+                <field name="subtotal" readonly="1" widget="monetary"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_sale_line_form" model="ir.ui.view">
+        <field name="name">easy.sales.sale.line.form</field>
+        <field name="model">easy.sales.sale.line</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            Línea de Venta
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Producto">
+                            <field name="product_id" options="{'no_create': False}"/>
+                            <field name="size" widget="radio" options="{'horizontal': true}"/>
+                            <field name="quantity"/>
+                        </group>
+                        <group string="Precios">
+                            <field name="unit_price" readonly="1" widget="monetary"/>
+                            <field name="subtotal" readonly="1" widget="monetary"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista principal de ventas actualizada -->
     <record id="view_sale_tree" model="ir.ui.view">
         <field name="name">easy.sales.sale.list</field>
         <field name="model">easy.sales.sale</field>
@@ -7,13 +50,11 @@
             <list default_order="id desc" decoration-success="state == 'confirmed' and type == 'cash'" decoration-warning="state == 'confirmed' and type == 'credit'" decoration-muted="state == 'draft'">
                 <field name="id" string="Número"/>
                 <field name="customer_id"/>
-                <field name="product_id"/>
-                <field name="size" widget="badge"/>
-                <field name="quantity"/>
+                <field name="date" widget="date"/>
                 <field name="total" sum="Total" widget="monetary"/>
                 <field name="type" widget="badge" decoration-success="type == 'cash'" decoration-warning="type == 'credit'"/>
                 <field name="state" widget="badge" decoration-success="state == 'confirmed'" decoration-muted="state == 'draft'"/>
-                <field name="create_date" string="Fecha" widget="date"/>
+                <field name="create_date" string="Fecha Creación" widget="datetime" invisible="1"/>
             </list>
         </field>
     </record>
@@ -24,11 +65,11 @@
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <button name="action_confirm_cash" string="💰 Venta al Contado" type="object" 
+                    <button name="action_confirm_cash" string="Venta al Cash" type="object" 
                             class="btn-primary" invisible="state != 'draft'" 
                             style="font-size: 16px; padding: 8px 16px; margin-right: 10px;"/>
-                    <button name="action_confirm_credit" string="📋 Venta Fiada" type="object" 
-                            class="btn-warning" invisible="state != 'draft'" 
+                    <button name="action_confirm_credit" string="Venta Fiada" type="object" 
+                            class="btn-primary" invisible="state != 'draft'" 
                             style="font-size: 16px; padding: 8px 16px;"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
                 </header>
@@ -41,26 +82,56 @@
                             <field name="id" readonly="1" string="Venta #"/>
                         </h1>
                     </div>
+                    
                     <group>
                         <group string="Información del Cliente">
                             <field name="customer_id" options="{'no_create': False, 'no_create_edit': True}"/>
-                        </group>
-                        <group string="Detalles de la Venta">
-                            <field name="product_id" options="{'no_create': False, 'no_create_edit': True}"/>
-                            <field name="size" widget="radio" options="{'horizontal': true}"/>
-                            <field name="quantity" widget="integer"/>
-                        </group>
-                    </group>
-                    <group>
-                        <group string="Precios">
-                            <field name="price" readonly="1" widget="monetary"/>
-                            <field name="total" readonly="1" widget="monetary" style="font-size: 18px; font-weight: bold;"/>
+                            <field name="date"/>
                         </group>
                         <group string="Estado de la Venta" invisible="state == 'draft'">
                             <field name="type" readonly="1" widget="badge"/>
                             <field name="create_date" readonly="1" string="Fecha de Creación"/>
                         </group>
                     </group>
+
+                    <notebook>
+                        <page string="Productos" name="products">
+                            <field name="line_ids" nolabel="1" widget="one2many_list">
+                                <list editable="bottom" decoration-warning="quantity &gt; 1" decoration-danger="subtotal == 0">
+                                    <field name="product_id" options="{'no_create': False}"/>
+                                    <field name="size" widget="selection"/>
+                                    <field name="quantity"/>
+                                    <field name="unit_price" readonly="1" widget="monetary"/>
+                                    <field name="subtotal" readonly="1" widget="monetary" sum="Subtotal"/>
+                                </list>
+                            </field>
+                            <div class="alert alert-info" role="alert" invisible="state == 'confirmed'">
+                                <strong>Importante:</strong> Las alertas de stock se muestran al editar productos. 
+                                El sistema validará el stock completo al confirmar la venta.
+                            </div>
+                            <group class="oe_subtotal_footer oe_right">
+                                <div class="oe_subtotal_footer_separator oe_inline">
+                                    <label for="total"/>
+                                    <field name="total" nolabel="1" class="oe_subtotal_footer_separator" widget="monetary" 
+                                           style="font-size: 20px; font-weight: bold;"/>
+                                </div>
+                            </group>
+                        </page>
+                        
+                        <!-- Página de compatibilidad con el sistema anterior -->
+                        <page string="Vista Clásica" name="classic_view" invisible="line_ids">
+                            <group>
+                                <group string="Producto Individual (Modo Compatibilidad)">
+                                    <field name="product_id" options="{'no_create': False, 'no_create_edit': True}"/>
+                                    <field name="size" widget="radio" options="{'horizontal': true}"/>
+                                    <field name="quantity" widget="integer"/>
+                                </group>
+                                <group string="Precios">
+                                    <field name="price" readonly="1" widget="monetary"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
                 </sheet>
             </form>
         </field>
@@ -72,7 +143,7 @@
         <field name="arch" type="xml">
             <search string="Buscar Ventas">
                 <field name="customer_id" string="Cliente"/>
-                <field name="product_id" string="Producto"/>
+                <field name="id" string="Número de Venta"/>
                 <separator/>
                 <filter string="Borradores" name="draft" domain="[('state', '=', 'draft')]"/>
                 <filter string="Confirmadas" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
@@ -80,14 +151,14 @@
                 <filter string="Al Contado" name="cash" domain="[('type', '=', 'cash')]"/>
                 <filter string="Fiadas" name="credit" domain="[('type', '=', 'credit')]"/>
                 <separator/>
-                <filter string="Hoy" name="today" domain="[('create_date', '&gt;=', context_today())]"/>
-                <filter string="Últimos 7 días" name="last_week" domain="[('create_date', '&gt;=', (context_today() - relativedelta(days=7)))]"/>
+                <filter string="Hoy" name="today" domain="[('date', '=', context_today())]"/>
+                <filter string="Esta Semana" name="this_week" domain="[('date', '&gt;=', (context_today() - relativedelta(days=context_today().weekday())))]"/>
+                <filter string="Este Mes" name="this_month" domain="[('date', '&gt;=', (context_today().replace(day=1)))]"/>
                 <group expand="0" string="Agrupar Por">
                     <filter string="Cliente" name="group_customer" context="{'group_by': 'customer_id'}"/>
-                    <filter string="Producto" name="group_product" context="{'group_by': 'product_id'}"/>
                     <filter string="Tipo" name="group_type" context="{'group_by': 'type'}"/>
                     <filter string="Estado" name="group_state" context="{'group_by': 'state'}"/>
-                    <filter string="Fecha" name="group_date" context="{'group_by': 'create_date:day'}"/>
+                    <filter string="Fecha" name="group_date" context="{'group_by': 'date:day'}"/>
                 </group>
             </search>
         </field>
@@ -105,7 +176,7 @@
                 ¡Crea tu primera venta!
             </p>
             <p>
-                Registra las ventas de tus productos y gestiona el inventario automáticamente.
+                Registra ventas con múltiples productos y gestiona el inventario automáticamente.
             </p>
         </field>
     </record>
