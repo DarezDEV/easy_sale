@@ -4,10 +4,45 @@
         <field name="name">easy.sales.debt.list</field>
         <field name="model">easy.sales.debt</field>
         <field name="arch" type="xml">
-            <list>
+            <list decoration-danger="amount &gt; 1000" decoration-warning="amount &gt; 500">
                 <field name="customer_id"/>
-                <field name="amount" sum="Total Pendiente"/>
+                <field name="sale_id" string="Venta #"/>
+                <field name="amount" sum="Total Pendiente" widget="monetary"/>
+                <field name="create_date" string="Fecha" widget="date"/>
             </list>
+        </field>
+    </record>
+
+    <record id="view_debt_kanban" model="ir.ui.view">
+        <field name="name">easy.sales.debt.kanban</field>
+        <field name="model">easy.sales.debt</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile">
+                <field name="customer_id"/>
+                <field name="amount"/>
+                <field name="sale_id"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="o_kanban_record_top mb16">
+                                <div class="o_kanban_record_headings">
+                                    <strong class="o_kanban_record_title">
+                                        <field name="customer_id"/>
+                                    </strong>
+                                </div>
+                                <span class="badge badge-pill badge-warning">
+                                    $<field name="amount"/>
+                                </span>
+                            </div>
+                            <div class="o_kanban_record_bottom">
+                                <div class="oe_kanban_bottom_left">
+                                    Venta #<field name="sale_id"/>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
         </field>
     </record>
 
@@ -17,20 +52,31 @@
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <button name="action_register_payment" string="Registrar Pago" type="object" class="btn-success" style="font-size: 20px; padding: 10px;"/>
+                    <button name="action_register_payment" string="💰 Registrar Pago" type="object" 
+                            class="btn-success" style="font-size: 16px; padding: 8px 16px;"/>
                 </header>
                 <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="toggle_active" type="object" class="oe_stat_button" icon="fa-archive" invisible="1"/>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            Deuda de <field name="customer_id" readonly="1"/>
+                        </h1>
+                    </div>
                     <group>
-                        <field name="customer_id" readonly="1"/>
-                        <field name="sale_id" readonly="1"/>
-                        <field name="amount"/>
+                        <group string="Información de la Deuda">
+                            <field name="sale_id" readonly="1" string="Venta Relacionada"/>
+                            <field name="amount" widget="monetary" readonly="1"/>
+                            <field name="create_date" readonly="1" string="Fecha de Creación"/>
+                        </group>
                     </group>
                     <notebook>
-                        <page string="Pagos">
-                            <field name="payment_ids">
-                                <list editable="top">
-                                    <field name="amount"/>
-                                    <field name="date"/>
+                        <page string="Historial de Pagos" name="payments">
+                            <field name="payment_ids" nolabel="1">
+                                <list editable="top" decoration-success="amount &gt; 0">
+                                    <field name="amount" widget="monetary" required="1"/>
+                                    <field name="date" required="1"/>
                                 </list>
                             </field>
                         </page>
@@ -40,11 +86,55 @@
         </field>
     </record>
 
+    <record id="view_debt_search" model="ir.ui.view">
+        <field name="name">easy.sales.debt.search</field>
+        <field name="model">easy.sales.debt</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Deudas">
+                <field name="customer_id" string="Cliente"/>
+                <field name="sale_id" string="Venta"/>
+                <separator/>
+                <filter string="Deudas Altas (&gt;$1000)" name="high_debt" domain="[('amount', '&gt;', 1000)]"/>
+                <filter string="Deudas Medias ($500-$1000)" name="medium_debt" domain="[('amount', '&gt;=', 500), ('amount', '&lt;=', 1000)]"/>
+                <filter string="Deudas Bajas (&lt;$500)" name="low_debt" domain="[('amount', '&lt;', 500)]"/>
+                <separator/>
+                <filter string="Esta Semana" name="this_week" domain="[('create_date', '&gt;=', (context_today() - relativedelta(days=context_today().weekday())))]"/>
+                <filter string="Este Mes" name="this_month" domain="[('create_date', '&gt;=', (context_today().replace(day=1)))]"/>
+                <group expand="0" string="Agrupar Por">
+                    <filter string="Cliente" name="group_customer" context="{'group_by': 'customer_id'}"/>
+                    <filter string="Fecha" name="group_date" context="{'group_by': 'create_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
     <record id="action_debt" model="ir.actions.act_window">
         <field name="name">Deudas</field>
         <field name="res_model">easy.sales.debt</field>
-        <field name="view_mode">list,form</field>
-        <field name="view_id" ref="view_debt_tree"/>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="view_id" ref="view_debt_kanban"/>
+        <field name="search_view_id" ref="view_debt_search"/>
+        <field name="context">{'search_default_last_month': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                ¡No hay deudas pendientes!
+            </p>
+            <p>
+                Las deudas aparecerán aquí cuando realices ventas fiadas.
+            </p>
+        </field>
+    </record>
+
+    <record id="view_payment_tree" model="ir.ui.view">
+        <field name="name">easy.sales.payment.list</field>
+        <field name="model">easy.sales.payment</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="debt_id" string="Deuda"/>
+                <field name="amount" widget="monetary"/>
+                <field name="date"/>
+            </list>
+        </field>
     </record>
 
     <record id="view_payment_form" model="ir.ui.view">
@@ -52,11 +142,35 @@
         <field name="model">easy.sales.payment</field>
         <field name="arch" type="xml">
             <form>
-                <group>
-                    <field name="amount"/>
-                    <field name="date"/>
-                </group>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            Pago de $<field name="amount" widget="monetary" nolabel="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Detalles del Pago">
+                            <field name="debt_id" readonly="1"/>
+                            <field name="date" required="1"/>
+                        </group>
+                    </group>
+                </sheet>
             </form>
+        </field>
+    </record>
+
+    <record id="action_payment" model="ir.actions.act_window">
+        <field name="name">Pagos</field>
+        <field name="res_model">easy.sales.payment</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_payment_tree"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                ¡No hay pagos registrados!
+            </p>
+            <p>
+                Los pagos aparecerán aquí cuando se registren abonos a las deudas.
+            </p>
         </field>
     </record>
 </odoo>

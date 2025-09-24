@@ -1,4 +1,6 @@
+# customer.py
 from odoo import models, fields
+from odoo.exceptions import UserError
 
 class EasySalesCustomer(models.Model):
     _name = 'easy.sales.customer'
@@ -17,3 +19,15 @@ class EasySalesCustomer(models.Model):
             'view_mode': 'tree,form',
             'domain': [('customer_id', '=', self.id)],
         }
+
+    def unlink(self):
+        for customer in self:
+            # Verificar si hay ventas
+            if customer.sale_ids:
+                raise UserError(f'No se puede eliminar el cliente "{customer.name}" porque tiene {len(customer.sale_ids)} venta(s) registrada(s).')
+            
+            # Verificar si hay deudas
+            if customer.debt_ids:
+                raise UserError(f'No se puede eliminar el cliente "{customer.name}" porque tiene {len(customer.debt_ids)} deuda(s) pendiente(s).')
+        
+        return super().unlink()

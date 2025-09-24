@@ -1,8 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <menuitem id="menu_easy_sales_root" name="Easy Sales"/>
-    <menuitem id="menu_products" parent="menu_easy_sales_root" name="Productos" action="action_product"/>
-    <menuitem id="menu_customers" parent="menu_easy_sales_root" name="Clientes" action="action_customer"/>
-    <menuitem id="menu_sales" parent="menu_easy_sales_root" name="Ventas" action="action_sale"/>
-    <menuitem id="menu_debts" parent="menu_easy_sales_root" name="Deudas" action="action_debt"/>
+    <!-- Menú Principal -->
+    <menuitem id="menu_easy_sales_root" 
+              name="Easy Sales" 
+              web_icon="easy_sales,static/description/icon.png"
+              sequence="10"/>
+
+    <!-- Submenús con iconos y secuencias -->
+    <menuitem id="menu_sales" 
+              parent="menu_easy_sales_root" 
+              name="Ventas" 
+              action="action_sale"
+              sequence="10"/>
+
+    <menuitem id="menu_products" 
+              parent="menu_easy_sales_root" 
+              name="Productos" 
+              action="action_product"
+              sequence="20"/>
+
+    <menuitem id="menu_customers" 
+              parent="menu_easy_sales_root" 
+              name="Clientes" 
+              action="action_customer"
+              sequence="30"/>
+
+    <menuitem id="menu_debts" 
+              parent="menu_easy_sales_root" 
+              name="Deudas" 
+              action="action_debt"
+              sequence="40"/>
+
+    <!-- Submenú de Configuración -->
+    <menuitem id="menu_configuration" 
+              parent="menu_easy_sales_root" 
+              name="Configuración" 
+              sequence="100"/>
+
+    <menuitem id="menu_categories" 
+              parent="menu_configuration" 
+              name="Categorías" 
+              action="action_category"
+              sequence="10"/>
+
+    <menuitem id="menu_payments" 
+              parent="menu_configuration" 
+              name="Pagos" 
+              action="action_payment"
+              sequence="20"/>
 </odoo>

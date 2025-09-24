@@ -5,9 +5,40 @@
         <field name="model">easy.sales.customer</field>
         <field name="arch" type="xml">
             <list editable="top">
+                <field name="name" required="1" placeholder="Nombre del cliente..."/>
+                <field name="phone" placeholder="Teléfono (opcional)" widget="phone"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_customer_kanban" model="ir.ui.view">
+        <field name="name">easy.sales.customer.kanban</field>
+        <field name="model">easy.sales.customer</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile">
                 <field name="name"/>
                 <field name="phone"/>
-            </list>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="o_kanban_record_top mb16">
+                                <div class="o_kanban_record_headings">
+                                    <strong class="o_kanban_record_title">
+                                        <i class="fa fa-user-o" style="margin-right: 5px;"/>
+                                        <field name="name"/>
+                                    </strong>
+                                </div>
+                            </div>
+                            <div class="o_kanban_record_bottom" t-if="record.phone.raw_value">
+                                <div class="oe_kanban_bottom_left">
+                                    <i class="fa fa-phone" style="margin-right: 5px;"/>
+                                    <field name="phone"/>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
         </field>
     </record>
 
@@ -17,23 +48,39 @@
         <field name="arch" type="xml">
             <form>
                 <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="toggle_active" type="object" class="oe_stat_button" icon="fa-archive" invisible="1"/>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Nombre del cliente..."/>
+                        </h1>
+                    </div>
                     <group>
-                        <field name="name"/>
-                        <field name="phone"/>
+                        <group string="Información de Contacto">
+                            <field name="phone" widget="phone" placeholder="Número de teléfono"/>
+                        </group>
                     </group>
                     <notebook>
-                        <page string="Historial">
-                            <field name="sale_ids">
-                                <list>
+                        <page string="Historial de Ventas" name="sales_history">
+                            <field name="sale_ids" nolabel="1" readonly="1">
+                                <list decoration-success="type == 'cash'" decoration-warning="type == 'credit'">
+                                    <field name="create_date" string="Fecha" widget="date"/>
                                     <field name="product_id"/>
+                                    <field name="size" widget="badge"/>
                                     <field name="quantity"/>
-                                    <field name="total"/>
-                                    <field name="type"/>
+                                    <field name="total" widget="monetary"/>
+                                    <field name="type" widget="badge" decoration-success="type == 'cash'" decoration-warning="type == 'credit'"/>
+                                    <field name="state" invisible="1"/>
                                 </list>
                             </field>
-                            <field name="debt_ids">
-                                <list>
-                                    <field name="amount"/>
+                        </page>
+                        <page string="Deudas Pendientes" name="pending_debts">
+                            <field name="debt_ids" nolabel="1" readonly="1">
+                                <list decoration-danger="amount &gt; 0">
+                                    <field name="sale_id" string="Venta"/>
+                                    <field name="amount" widget="monetary" sum="Total Pendiente"/>
+                                    <field name="create_date" string="Fecha" widget="date"/>
                                 </list>
                             </field>
                         </page>
@@ -43,10 +90,33 @@
         </field>
     </record>
 
+    <record id="view_customer_search" model="ir.ui.view">
+        <field name="name">easy.sales.customer.search</field>
+        <field name="model">easy.sales.customer</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Clientes">
+                <field name="name" string="Nombre"/>
+                <field name="phone" string="Teléfono"/>
+                <separator/>
+                <filter string="Con Teléfono" name="with_phone" domain="[('phone', '!=', False)]"/>
+                <filter string="Sin Teléfono" name="no_phone" domain="[('phone', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
     <record id="action_customer" model="ir.actions.act_window">
         <field name="name">Clientes</field>
         <field name="res_model">easy.sales.customer</field>
-        <field name="view_mode">list,form</field>
-        <field name="view_id" ref="view_customer_tree"/>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="view_id" ref="view_customer_kanban"/>
+        <field name="search_view_id" ref="view_customer_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                ¡Registra tu primer cliente!
+            </p>
+            <p>
+                Mantén un registro de tus clientes para gestionar ventas y deudas.
+            </p>
+        </field>
     </record>
 </odoo>
